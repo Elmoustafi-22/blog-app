@@ -23,6 +23,7 @@ function BlogOverview({blogList}) {
     const [openBlogDialog, setOpenBlogDialog] = useState(false)
     const [loading, setLoading] = useState(false);
     const [blogFormData, setBlogFormData] = useState(initialBlogFormData)
+    const [currentEditedBlogID, setCurrentEditedBlogID] = useState(null)
 
     const router = useRouter();
 
@@ -33,7 +34,12 @@ function BlogOverview({blogList}) {
     async function handleSaveBlogData(){
         try{
             setLoading(true)
-            const apiResponse = await fetch('/api/add-blog', {
+            const apiResponse = currentEditedBlogID !== null ?
+            await fetch(`/api/update-blog?id=${currentEditedBlogID}`, {
+              method: 'PUT',
+              body : JSON.stringify(blogFormData)
+            })
+            : await fetch('/api/add-blog', {
                 method: 'POST',
                 body: JSON.stringify(blogFormData)
             })
@@ -43,6 +49,7 @@ function BlogOverview({blogList}) {
                 setBlogFormData(initialBlogFormData)
                 setOpenBlogDialog(false)
                 setLoading(false)
+                setCurrentEditedBlogID(null)
                 router.refresh()
             }
 
@@ -67,6 +74,16 @@ function BlogOverview({blogList}) {
       }
     }
 
+    async function handleEdit(blog) {
+      setCurrentEditedBlogID(blog?._id)
+      setBlogFormData({
+        title: blog?.title,
+        description: blog?.description
+      })
+      setOpenBlogDialog(true)
+
+    }
+
     return (
       <div className="min-h-screen flex flex-col gap-10 bg-gradient-to-r from-green-500 via-green-600 to-blue-700 p-6">
         <AddNewBlog
@@ -77,6 +94,8 @@ function BlogOverview({blogList}) {
           blogFormData={blogFormData}
           setBlogFormData={setBlogFormData}
           handleSaveBlogData={handleSaveBlogData}
+          currentEditedBlogID={currentEditedBlogID}
+          setCurrentEditedBlogID={setCurrentEditedBlogID}
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-5">
@@ -87,7 +106,7 @@ function BlogOverview({blogList}) {
                     <CardTitle className="mb-5">{blogItem.title}</CardTitle>
                     <CardDescription>{blogItem.description}</CardDescription>
                     <div className="mt-3 flex items-center justify-between">
-                      <Button>Edit</Button>
+                      <Button onClick={() =>handleEdit(blogItem)}>Edit</Button>
                       <Button onClick={() => handleDeleteBlogById(blogItem._id)}>
                         <Trash2 />
                       </Button>
