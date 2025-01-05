@@ -10,8 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "../ui/button";
-import {DeleteIcon, Delete} from 'lucide-react'
+import {Trash2} from 'lucide-react'
 import { useRouter } from "next/navigation";
+import { Label } from "../ui/label";
 
 const initialBlogFormData = {
     title: '',
@@ -53,6 +54,19 @@ function BlogOverview({blogList}) {
         }
     }
 
+    async function handleDeleteBlogById(Id){
+      try {
+        const apiResponse = await fetch(`/api/delete-blog?id=${Id}`, {
+          method: 'DELETE',
+        })
+        const result = await apiResponse.json()
+
+        if (result?.success) router.refresh()
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
     return (
       <div className="min-h-screen flex flex-col gap-10 bg-gradient-to-r from-green-500 via-green-600 to-blue-700 p-6">
         <AddNewBlog
@@ -74,14 +88,14 @@ function BlogOverview({blogList}) {
                     <CardDescription>{blogItem.description}</CardDescription>
                     <div className="mt-3 flex items-center justify-between">
                       <Button>Edit</Button>
-                      <Button>
-                        <DeleteIcon />
+                      <Button onClick={() => handleDeleteBlogById(blogItem._id)}>
+                        <Trash2 />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))
-            : null}
+            : <Label className="text-3xl font-extrabold">No Blog found! Please add one</Label>}
         </div>
       </div>
     );
