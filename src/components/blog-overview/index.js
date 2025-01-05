@@ -1,52 +1,55 @@
 'use client'
-import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { useState } from "react";
+import AddNewBlog from "../add-new-blog";
+
+const initialBlogFormData = {
+    title: '',
+    description : ''
+}
 
 function BlogOverview() {
     const [openBlogDialog, setOpenBlogDialog] = useState(false)
+    const [loading, setLoading] = useState(false);
+    const [blogFormData, setBlogFormData] = useState(initialBlogFormData)
+
+    async function handleSaveBlogData(){
+        try{
+            setLoading(true)
+            const apiResponse = await fetch('/api/add-blog', {
+                method: 'POST',
+                body: JSON.stringify(blogFormData)
+            })
+
+            const result = await apiResponse.json()
+            if (result?.success) {
+                setBlogFormData(initialBlogFormData)
+                setOpenBlogDialog(false)
+                setLoading(false)
+            }
+
+            console.log(result)
+        } catch(error){
+            console.log(error)
+            setLoading(false)
+            setBlogFormData(initialBlogFormData)
+        }
+    }
+
     return (
       <div className="min-h-screen flex flex-col gap-10 bg-gradient-to-r from-green-500 via-green-600 to-blue-700 p-6">
-        <div className="font-poppins font-semibold text-slate-50">
-          <Button onClick={() => setOpenBlogDialog(true)}>Add New Blog</Button>
-        </div>
+        <AddNewBlog
+          openBlogDialog={openBlogDialog}
+          setOpenBlogDialog={setOpenBlogDialog}
+          loading={loading}
+          setLoading={setLoading}
+          blogFormData={blogFormData}
+          setBlogFormData={setBlogFormData}
+          handleSaveBlogData={handleSaveBlogData}
+        />
+
         <div className="font-poppins font-semibold text-slate-50">
           Add New Blog section
         </div>
-        <Dialog open={openBlogDialog} onOpenChange={setOpenBlogDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add New Blog</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title
-                </Label>
-                <Input id="title" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Input id="description"  className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button">Save changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
     );
 }
